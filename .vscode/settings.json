@@ -1,0 +1,7 @@
+{
+    "python.linting.pylintEnabled": true,
+    "python.pythonPath": "/Users/dennisyi/miniconda3/envs/penrose/bin/python",
+    "python.linting.mypyEnabled": false,
+    "python.linting.enabled": true,
+    "python.linting.pep8Enabled": false
+}
