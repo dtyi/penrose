@@ -21,6 +21,39 @@ class Edge:
         self.v1 = v1
         self.notches = notches
             
+class Deflation:
+    # This class is generic to tiling systems, not P3 in particular.
+    # I was just too lazy to make a generic tiling class 
+    # and then inherit (subclass) from it.
+    # A Deflation uniquely defines an inverse inflation.
+    def __init__(self, matrix, begin, end):
+        # matrix is a 2x2 linear transform from vect of begin shape
+        # to the vect of a end (deflated, smaller) shape.
+        self.matrix = matrix
+
+        self.inverse = matrix.inverse
+
+        self.begin = begin
+        self.end = end
+
+    def install(self):
+        # begin and end should be the types e.g. thinA, fatA
+        # of the polygon being deflated and the result.
+        self.begin.deflations += [(self.matrix,    self.end)]
+        self.end.inflations   += [(self.inverse, self.begin)]
+    
+    def __str__(self):
+        return str(self.matrix)+str(self.begin)+str(self.end)
+
+class BiDeflation(Deflation):
+    # This subclass works with the left/right-handed P3 half-rhombs,
+    # which have symmetric inflations/deflations, so instead 
+    # of specifying them twice, this just flips one definition.
+    # This class could perhaps be better named DeflationWithShadow.
+    def shadow(self):
+        return self.__class__(self.matrix.conj,
+                                self.begin.shadow,
+                                self.end.shadow)
 
 class Polygon(ABC):
     # This class is generic to tiling systems, not P3 in particular.
@@ -76,6 +109,12 @@ class Polygon(ABC):
     def vert_transf(self):
         pass
 
+    # The direction the vertices wind, 1 for CCW, -1 for clockwise
+    @property
+    @abstractmethod
+    def handedness(self):
+        pass
+
     @property
     @abstractmethod
     def edge_notches(self):
@@ -92,6 +131,56 @@ class Polygon(ABC):
                            np.hstack((self.verts[1:],self.verts[0:2])),
                            self.edge_notches):
             ret.append(Edge(v0,v1,n))
+        return ret
+
+    def expand_edge(self, edge_num, desired_shapes=None):
+        """Create a rhomb that matches an existing one
+        across a given edge. The prototypical use case
+        is expanding a patch of tiles outwards."""
+        #print(desired_shapes)
+        # find which tiles match, and across which edge
+        # notches_o: how many notches are on the given edge.
+        # notches_t: target edge (o for own edge)
+        #refactor:
+        # for speed, matches could be cached after the polygons' 
+        # instantiation, instead of being re-found on every call.
+        if desired_shapes is None:
+            desired_shapes = self.system
+            
+        notches_o = self.edge_notches[edge_num]
+        matches = []
+        for shape in desired_shapes:
+            for i, notches_t in enumerate(shape.edge_notches):
+                if notches_t+notches_o == 0:
+                    matches.append((shape,i))
+        #print(matches)
+        
+        #print(edge_num-3,edge_num-1)
+        # The vertices of the edge in question
+        #edge = self.verts[origin_edge_index-3:origin_edge_index-1]
+        # Fancy indexing allows us to take two consecutive points from verts,
+        # wrapping around the end (slicing doesn't support this).
+        edge = self.verts[np.arange(edge_num,edge_num+2)%3]
+        #edge = self.verts[origin_edge_index%3-3:(origin_edge_index+2)%3-3]
+        ret = []
+        for match in matches:
+            # If we're matching a left-handed HalfRhomb to another
+            # left-handed, or right to right, their rotation (rot)
+            # will have the same signs. In that case, we have to
+            # reverse the ordering of the vertices in the edge
+            # in order to have them match the ordering in the new
+            # HalfRhomb.
+            # match[0] is the shape, [1] is the edge index
+            # edge_transf is the matrix that transforms the defining
+            # vect of the target polygon to the matched edge.
+            # Since that edge is shared with the self Polygon
+            # (up to rotation), the inverse transforms our edge to
+            # the identity vector of the target shape.
+            edge_transf = match[0].vert_transf[[match[1],(match[1]+1)%3]]
+            if self.handedness*match[0].handedness > 0:
+                ret.append(match[0](edge_transf.inverse @ edge[::-1]))
+            else:
+                ret.append(match[0](edge_transf.inverse @ edge) )
         return ret
     
     # A polygon properly belongs in a aperiodic tiling system
@@ -134,8 +223,8 @@ class Polygon(ABC):
 #refactor:
 # currently the patch-growing code works on halfRhombs, and
 # performs a lot of extra work finding mirror halfrhombs.
-# It's probably a good idea to add a Rhomb class and have it work on 
-#  those.
+# Maybe it's a good idea to add a Rhomb class and have it work on 
+# those.
 class HalfRhomb(Polygon):
     # The basic rotation amount is pi/5
     incr = 1j*np.pi/5
@@ -145,6 +234,10 @@ class HalfRhomb(Polygon):
     @abstractmethod
     def rot(self):
         pass
+
+    @property
+    def handedness(self):
+        return 1-2*(self.rot<0) # sign, with 0 evaluating to 1
 
     # Return the corresponding other half-rhomb,
     # that completes the Penrose rhomb.
@@ -204,13 +297,18 @@ CYCLOTOMIC = 0
 FLOATING = 1
 
 
+# if USE_PYTHON_FLOAT:
+#     import float_implementation as implementation
+# elif USE_FANCY_INTS:
+#     import fancy_implementation as implementation
+
 # A convenience grouping to distinguish the ground-level
 # tiles from the superclasses in the class hierarchy
 shapes = [FatA, FatB, ThinA, ThinB]
 
-def make_halfrhombs(number_system=CYCLOTOMIC):
+def make_halfrhombs(number_system=FLOATING):
     # One list that contains all the shape classes that go together
-    system_shapes = []
+    # system_shapes = []
 
     for shape in shapes:
         #print(shape.rot, shape.incr)
@@ -232,90 +330,8 @@ def make_halfrhombs(number_system=CYCLOTOMIC):
                  [1,np.exp(shape.rot*shape.incr)],
                  [1,width]
                  ])
-        #refactor:
-        # make the list shapes earlier, and move this method into
-        # Polygon, to avoid monkeypatching
-        # This method is assigned after class creation so that it can
-        # use list shapes, containing those very classes [FatA,...]
-        # as a default kwarg value.
-        def expand_edge(self, edge_num, desired_shapes=system_shapes):
-            """Create a rhomb that matches an existing one
-            across a given edge. The prototypical use case
-            is expanding a patch of tiles outwards."""
-            #print(desired_shapes)
-            # find which tiles match, and across which edge
-            # notches_o: how many notches are on the given edge.
-            # notches_t: target edge (o for own edge)
-            #refactor:
-            # for speed, matches could be cached after the polygons' 
-            # instantiation, instead of being re-found on every call.
-            notches_o = self.edge_notches[edge_num]
-            matches = []
-            for shape in desired_shapes:
-                for i, notches_t in enumerate(shape.edge_notches):
-                    if notches_t+notches_o == 0:
-                        matches.append((shape,i))
-            #print(matches)
-                
-            #print(edge_num-3,edge_num-1)
-            # The vertices of the edge in question
-            #edge = self.verts[origin_edge_index-3:origin_edge_index-1]
-            # Fancy indexing allows us to take two consecutive points from verts,
-            # wrapping around the end (slicing doesn't support this).
-            edge = self.verts[np.arange(edge_num,edge_num+2)%3]
-            #edge = self.verts[origin_edge_index%3-3:(origin_edge_index+2)%3-3]
-            ret = []
-            for match in matches:
-                # if we're matching a left-handed HalfRhomb to another
-                # left-handed, or right to right, their rotation (rot)
-                # will have the same signs. In that case, we have to
-                # reverse the ordering of the vertices in the edge
-                # in order to have them match the ordering in the new
-                # HalfRhomb.
-                # match[0] is the shape, [1] is the edge index
-                edge_transf = match[0].vert_transf[[match[1],(match[1]+1)%3]]
-                if self.rot*match[0].rot > 0:
-                    ret.append(match[0](edge_transf.inverse @ edge[::-1]))
-                else:
-                    ret.append(match[0](edge_transf.inverse @ edge) )
-            return ret
 
-        shape.expand_edge = expand_edge
-        
-class Deflation():
-    # This class is generic to tiling systems, not P3 in particular.
-    # I was just too lazy to make a generic tiling class 
-    # and then inherit (subclass) from it.
-    # A Deflation uniquely defines an inverse inflation.
-    def __init__(self, matrix, begin, end):
-        # matrix is a 2x2 linear transform from vect of begin shape
-        # to the vect of a end (deflated, smaller) shape.
-        self.matrix = matrix
-        if SYMBOLIC:
-            self.inverse = matrix.inverse
-        else:
-            self.inverse = np.linalg.inv(matrix)
-        self.begin = begin
-        self.end = end
-
-    def install(self):
-        # begin and end should be the types e.g. thinA, fatA
-        # of the polygon being deflated and the result.
-        self.begin.deflations += [(self.matrix,    self.end)]
-        self.end.inflations   += [(self.inverse, self.begin)]
-    
-    def __str__(self):
-        return str(self.matrix)+str(self.begin)+str(self.end)
-
-class BiDeflation(Deflation):
-    # This subclass works with the left/right-handed P3 half-rhombs,
-    # which have symmetric inflations/deflations, so instead 
-    # of specifying them twice, this just flips one definition.
-    # This class could perhaps be better named DeflationWithShadow.
-    def shadow(self):
-        return self.__class__(np.conj(self.matrix),
-                                self.begin.shadow,
-                                self.end.shadow)
+        shape.system = shapes
         
     # Specify the particular deflations that define the P3 tiling,
     # (along with the half-rhomb shapes).

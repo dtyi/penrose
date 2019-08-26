@@ -74,16 +74,15 @@ class SumZ(object):
     as a sum of five equiangularly spaced unit basis vectors.
     Well, technically a spanning set, since they're linearly dependent.
     Well, actually, any four out of five are linearly independent
-    as long as you're working in the integers (or probably rationals)
+    as long as you're working in the integers (or rationals?)
     rather than reals, since no integral combination of three can 
     generate a fourth.
     
-    This class can be dropped into the existing code to replace
-    the number 0 or some other complex e.g. 1j
+    This class can be dropped into the existing code to complex nums
     when initializing Polygons, within the vect argument.
     Unfortunately, for the sake of matrix multiplication,
-    don't instantiate a Polygon with np.array([[SumZ1],[SumZ2]]) as 
-    vect, but ObjMatrix([[SumZ1],[SumZ2]]). This is bcause numpy doesn't
+    don't instantiate a Polygon with vect = np.array([[SumZ1],[SumZ2]]), 
+    but ObjMatrix([[SumZ1],[SumZ2]]). This is bcause numpy doesn't
     support matrix multiplication with object arrays. See ObjMatrix
     for more details about numpy being wonky with arrays
     of objects and matrix multiplication."""
@@ -373,11 +372,13 @@ class SumPol(SumZ):
         if other==1:
             return self
         
-        if not isinstance(other, self.__class__):
-            raise TypeError("Only compatible with 1 and SumPol")
-        return self.__class__(self.rotation+other.rotation,
-                              self.size+other.size)
-        
+        #if not isinstance(other, self.__class__):
+        #    raise TypeError("Only compatible with 1 and SumPol")
+        if isinstance(other, self.__class__):
+            return self.__class__(self.rotation+other.rotation,
+                                  self.size+other.size)
+        return super().__mul__(other)
+
     #refactor: rewrite division as multiplicative inverse
     def __truediv__(self, other):
         # self/other
