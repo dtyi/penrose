@@ -105,20 +105,17 @@ class Polygon(ABC):
     # More generally, we just need some sort of function from
     # the polygon state vector to its vertices.
     @property
-    @abstractmethod
     def vert_transf(self):
-        pass
+        raise NotImplementedError
 
     # The direction the vertices wind, 1 for CCW, -1 for clockwise
     @property
-    @abstractmethod
     def handedness(self):
-        pass
+        raise NotImplementedError
 
     @property
-    @abstractmethod
     def edge_notches(self):
-        pass
+        raise NotImplementedError
 
     # Edges are ancillary to P3, as the relations between 
     # rhombs in the tiling system are fully defined by the 
@@ -187,9 +184,8 @@ class Polygon(ABC):
     # which should include the shapes that are related through
     # inflation, deflation, or edge matching.
     @property
-    @abstractmethod
     def system(self):
-        pass
+        raise NotImplementedError
 
     # Deflations: a list of (matrix, polygontype) tuples.
     # matrix is a 2x2 linear transform from vect of begin shape
@@ -197,17 +193,15 @@ class Polygon(ABC):
     # More generally, we need a multivalued function from this
     # polygon to child polygons.
     @property
-    @abstractmethod
     def deflations(self):
-        pass
+        raise NotImplementedError
     # Inflations are similar, except the mappings
     # (represented as matrices)
     # map from a smaller shape's [[center],[ehat]] to 
     # the bigger, containing shape.
     @property
-    @abstractmethod
     def inflations(self):
-        pass
+        raise NotImplementedError
     
     # Apply deflations; for every deflation in the list,
     # instantiate a new Polygon on the matrix (dot) product
@@ -231,9 +225,8 @@ class HalfRhomb(Polygon):
 
     # Not filled in: rot (base angle, as multiple of incr), 
     @property
-    @abstractmethod
     def rot(self):
-        pass
+        raise NotImplementedError
 
     @property
     def handedness(self):
@@ -242,9 +235,8 @@ class HalfRhomb(Polygon):
     # Return the corresponding other half-rhomb,
     # that completes the Penrose rhomb.
     @property
-    @abstractmethod
     def shadow(self):
-        pass
+        raise NotImplementedError
 
     def __neg__(self):
         return self.shadow(self.vect)
