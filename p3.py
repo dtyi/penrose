@@ -103,11 +103,10 @@ class Polygon(object):
     def verts(self):
         return self.vert_transf @ self.vect
 
-    # Vertex locations (as nx2 array; n vertices * (x,y) coords)
+    # Vertex locations (nx2 array; n vertices * (x,y) coords)
     @property
     def real_verts(self):
-        return np.stack((self.verts.real, self.verts.imag),
-                        axis=-1)
+        return np.stack((self.verts.real, self.verts.imag), axis=-1)
 
     # Vertex transformation:
     # This matrix maps the column vector [position, ehat]
@@ -227,10 +226,13 @@ class Polygon(object):
     def inflations(self):
         raise NotImplementedError
 
-    # Apply deflations; for every deflation in the list,
-    # instantiate a new Polygon on the matrix (dot) product
-    # of transformation_matrix @ location_orientation_vector
+    
     def deflate(self):
+        """
+        Apply deflations; for every deflation in the list,
+        instantiate a new Polygon on the matrix (dot) product
+        of ``transformation_matrix @ location_orientation_vector``
+        """
         return [fl[1](fl[0] @ self.vect) for fl in self.deflations]
 
     def inflate(self):
@@ -329,7 +331,7 @@ FLOATING = 1
 shapes = [FatA, FatB, ThinA, ThinB]
 
 
-def make_halfrhombs(number_system=FLOATING):
+def make_halfrhombs(number_system=CYCLOTOMIC):
     # One list that contains all the shape classes that go together
     # system_shapes = []
 
@@ -383,20 +385,20 @@ def make_halfrhombs(number_system=FLOATING):
                                   FatA, FatB),
                       ]
     else:
-        deflations = [BiDeflation(np.array([[1, 1/tau],
-                                            [0, np.exp(3j*np.pi/5)/tau]]),
+        deflations = [BiDeflation(ObjMatrix([[1, 1/tau],
+                                             [0, np.exp(3j*np.pi/5)/tau]]),
                                   ThinA, ThinA),
-                      BiDeflation(np.array([[1, np.exp(2j*np.pi/5)],
-                                            [0, np.exp(-3j*np.pi/5)/tau]]),
+                      BiDeflation(ObjMatrix([[1, np.exp(2j*np.pi/5)],
+                                             [0, np.exp(-3j*np.pi/5)/tau]]),
                                   ThinA, FatA),
-                      BiDeflation(np.array([[1, np.exp(1j*np.pi/5)],
-                                            [0, np.exp(-4j*np.pi/5)/tau]]),
+                      BiDeflation(ObjMatrix([[1, np.exp(1j*np.pi/5)],
+                                             [0, np.exp(-4j*np.pi/5)/tau]]),
                                   FatA, FatA),
-                      BiDeflation(np.array([[1, np.exp(1j*np.pi/5)],
-                                            [0, np.exp(-1j*np.pi/5)/tau]]),
+                      BiDeflation(ObjMatrix([[1, np.exp(1j*np.pi/5)],
+                                             [0, np.exp(-1j*np.pi/5)/tau]]),
                                   FatA, ThinB),
-                      BiDeflation(np.array([[1, tau],
-                                            [0, np.exp(5j*np.pi/5)/tau]]),
+                      BiDeflation(ObjMatrix([[1, tau],
+                                             [0, np.exp(5j*np.pi/5)/tau]]),
                                   FatA, FatB),
                       ]
 

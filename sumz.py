@@ -177,7 +177,6 @@ class SumZ(object):
                          self.coeffs[2]-self.coeffs[3] 
                         ])
     
-    @property
     def conjugate(self):
         # basis vectors get sent like this:
         #from 0 1 2 3 4

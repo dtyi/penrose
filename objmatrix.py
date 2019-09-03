@@ -15,16 +15,16 @@ class ObjMatrix(np.ndarray):
     def __rmatmul__(self, other):
         return ObjMatrix(np.dot(other, self))
 
-    def __mul__(self, other):
-        # What's the precedence of mul and rmul when both operands define it?
-        # Perhaps I could intentionally cede control when other is iterable.
-        return np.vectorize(other.__mul__)(other)
+    # def __mul__(self, other):
+    #     # What's the precedence of mul and rmul when both operands define it?
+    #     # Perhaps I could intentionally cede control when other is iterable.
+    #     return np.vectorize(other.__mul__)(other)
     
-    def __rmul__(self, other):
-        return np.vectorize(other.__rmul__)(other)
+    # def __rmul__(self, other):
+    #     return np.vectorize(other.__rmul__)(other)
 
-    def __add__(self, other):
-        return np.vectorize(other.__add__)(other)
+    # def __add__(self, other):
+    #     return np.vectorize(other.__add__)(other)
 
     @property
     def real(self):
@@ -41,7 +41,7 @@ class ObjMatrix(np.ndarray):
         return np.vectorize(lambda x: x.imag)(self)
     @property
     def conj(self):
-        return np.vectorize(lambda x: x.conjugate)(self)
+        return np.vectorize(lambda x: x.conjugate())(self)
     #refactor (todo): rewrite this using __getattr__ in order
     # to be more general and truly an ObjMatrix rather than
     # just this thing I bodged together ad-hoc.
