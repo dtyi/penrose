@@ -268,7 +268,8 @@ class SumZ(object):
         updown = int(np.rint(logr))
         if __debug__:
             if not np.isclose(logr,np.rint(logr)):
-                raise ValueError("log_tau {:.8} == {:.8} provokes"
+                print(other,logr)
+                raise ValueError("log_tau( {} )== {:.8f} provokes"
                     " large rounding".format(other,logr))
         if updown>0:
             for _ in range(updown):
