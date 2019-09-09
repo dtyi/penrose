@@ -1,0 +1,79 @@
+The ``p3`` module
+======================
+
+(test using ``python -m doctest -v examples.txt``)
+
+Using ``sumz``
+-------------------
+
+This is an example text file in reStructuredText format.  First import
+the ``sumz`` module:
+
+    >>> import numpy as np
+    >>> from sumz import *
+
+Now use it:
+
+    >>> SumZ()
+    SumZ([0,0,0,0,0])
+    >>> _.coords
+    0j
+
+    >>> SumZ(1,0,0,0,0)
+    SumZ([0,-1,-1,-1,-1])
+    >>> _.coords
+    (1+0j)
+
+These cyclotomic integers, the ring of the fifth root of unity, are
+based on a kind of unit pentagon. Note that currently floating-point
+safety isn't guaranteed; hence the isclose().
+
+    >>> SumZ(0,1,0,0,-1)
+    SumZ([0,1,0,0,-1])
+    >>> np.isclose(_.coords, np.sin(np.pi/180*72)*2j)
+    True
+
+The addition of all 5 unit vectors is 0;
+    >>> SumZ(1,1,1,1,1)
+    SumZ([0,0,0,0,0])
+
+And thus all such 'cycles' are nulled in internal representation.
+    >>> SumZ(1,2,3,4,5)
+    SumZ([0,1,2,3,4])
+
+They behave like complex numbers should; conjugates are reflected across
+the real axis.
+    >>> SumZ(1,2,3,4,5).conjugate() == SumZ(1,5,4,3,2)
+    True
+
+Multiplication is performed using circulant matrices, which are, quote,
+> integral kernel of a convolution operator on the cyclic group C_{n}
+ - Wikipedia
+
+    >>> SumZ(1,2,3,4,5).matrix
+    array([[0, 4, 3, 2, 1],
+           [1, 0, 4, 3, 2],
+           [2, 1, 0, 4, 3],
+           [3, 2, 1, 0, 4],
+           [4, 3, 2, 1, 0]])
+       
+    >>> SumZ(1,2,3,4,5)*SumZ(0,0,-1,-1,0)
+    SumZ([0,-2,1,4,2])
+
+They also support multiplication with straight (non-SumZ) complex nums 
+but at the moment it's not recommended to mix types like this.
+    >>> SumZ(1,2,3,4,5)*np.exp(72j*np.pi/180)
+    SumZ([0,-4,-3,-2,-1])
+    >>> SumZ(1,2,3,4,5)*SumZ(0,0,-1,-1,0) == SumZ(1,2,3,4,5)*SumZ.tau
+    True
+
+Using ``objmatrix``
+-------------------
+
+This is an example text file in reStructuredText format.  First import
+``objmatrix`` from the ``p3`` module:
+
+    >>> from objmatrix import *
+
+Now use it:
+

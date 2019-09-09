@@ -118,6 +118,10 @@ class SumZ(object):
         # Note that SumZ([0,0,0,0,0]) is the same point as 
         # SumZ([1,1,1,1,1])
         self.coeffs-=self.coeffs[0]
+
+        if any(np.rint(self.coeffs) != np.array(self.coeffs)):
+            raise TypeError("Non-integer coefficients!")
+        self.coeffs = np.around(self.coeffs)
         
     @classmethod
     def from_polar(cls, rotation, size):

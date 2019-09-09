@@ -26,7 +26,7 @@ class Edge:
 
 class Deflation:
     """
-    A Deflation uniquely defines an inverse inflation.
+    A Deflation has an inverse inflation.
     This class is generic to tiling systems, not P3 in particular, and
     may be refactored into a future generic tiling module.
     """
@@ -334,6 +334,9 @@ shapes = [FatA, FatB, ThinA, ThinB]
 def make_halfrhombs(number_system=CYCLOTOMIC):
     # One list that contains all the shape classes that go together
     # system_shapes = []
+
+    # system_shapes = [type(x.__name__, (x,), dict(x.__dict__)) 
+    #     for x in shapes]
 
     for shape in shapes:
         #print(shape.rot, shape.incr)
