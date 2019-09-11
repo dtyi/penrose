@@ -107,8 +107,6 @@ class SumZ(object):
     
     
     def __init__(self, coeffs=[0]*5, *args):
-        # This is really important: if you don't make a new object,
-        # indices (numpy array) is only passed by reference, not value!
         if len(args) > 0:
             self.coeffs = np.array((coeffs,)+args)
         else:
@@ -120,8 +118,8 @@ class SumZ(object):
         self.coeffs-=self.coeffs[0]
 
         if any(np.rint(self.coeffs) != np.array(self.coeffs)):
-            raise TypeError("Non-integer coefficients!")
-        self.coeffs = np.around(self.coeffs)
+            raise ValueError("Non-integer coefficients!")
+        self.coeffs = np.around(self.coeffs).astype(int)
         
     @classmethod
     def from_polar(cls, rotation, size):
@@ -203,6 +201,8 @@ class SumZ(object):
         #return circulant(self.coeffs) #alternative; might be faster
     
     def __add__(self, other):
+        if other==0:
+            return self
         # Only add to other instances of SumZ!
         if isinstance(other, SumZ):
             return SumZ(self.coeffs+other.coeffs)
@@ -211,6 +211,8 @@ class SumZ(object):
         
     
     def __sub__(self, other):
+        if other==0:
+            return self
         # Only add to other instances of SumZ!
         if isinstance(other, SumZ):
             return self+(-other)
@@ -220,6 +222,11 @@ class SumZ(object):
         return SumZ(-1*self.coeffs)
     
     def __mul__(self, other):
+        if other==1:
+            return self
+        if other==0:
+            return SumZ()
+
         # SumZ objects, mathematically speaking, are a subset of 
         # complex numbers. Multiplication by them is particularly nice.
         # the 5 basis vectors act on each other
@@ -268,7 +275,6 @@ class SumZ(object):
         updown = int(np.rint(logr))
         if __debug__:
             if not np.isclose(logr,np.rint(logr)):
-                print(other,logr)
                 raise ValueError("log_tau( {} )== {:.8f} provokes"
                     " large rounding".format(other,logr))
         if updown>0:
@@ -301,6 +307,8 @@ class SumZ(object):
     __rmul__ = __mul__
     
     def __truediv__(self, other):
+        if isinstance(other, SumPol):
+            return self*other.inv
         if isinstance(other, SumZ):
             # Is there a way to detect when one is a rational multiple
             # of the other? If possible, try to stay exact, and avoid
@@ -369,8 +377,12 @@ class SumPol(SumZ):
         self.rotation = rotation%10
         self.size = size
         bigness = np.linalg.matrix_power(self.tau_matrix, size)
+        #bigness -= bigness[0,0]
         mat = bigness @ self.rot_matrices[rotation%10]
         super().__init__(mat[:,0])
+
+    def __neg__(self):
+        return self.__class__(self.rotation+5,self.size)
 
     def __mul__(self, other):
         if other==1:
@@ -383,33 +395,42 @@ class SumPol(SumZ):
                                   self.size+other.size)
         return super().__mul__(other)
 
-    #refactor: rewrite division as multiplicative inverse
-    def __truediv__(self, other):
-        # self/other
-        if other==1:
-            return self
-        else:
-            if not isinstance(other, self.__class__):
-                raise TypeError("Only compatible with 1 and SumPol")
-            return self.__class__(self.rotation-other.rotation,
-                                  self.size-other.size)
-        # Safe: Pol*Pol or Pol/Pol -> Polar
-        # Unknown: Pol*SumZ or SumZ/Pol or Pol/SumZ -> ???
-        # the safe thing to do would be to just return SumZ objects.
-        # What we might want to do is automatically detect if the result
-        # Could possibly be a SumPol.
-        # There are 5 possibilities of orientation to check,
-        # but how can we detect if the matrix is a power of the size 
-        # (tau) matrix?
+    @property
+    def inv(self):
+        return self.__class__(-self.rotation, -self.size)
+
     def __rtruediv__(self, other):
-        # other/self
-        if other==1:
-            return self.__class__(-self.rotation, -self.size)
-        else:
-            if not isinstance(other, self.__class__):
-                raise TypeError("Only compatible with 1 and SumPol")
-            return self.__class__(other.rotation-self.rotation,
-                                  other.size-self.size)
+        return other*self.inv
+
+    #refactor: rewrite division as multiplicative inverse
+    # def __truediv__(self, other):
+    #     # self/other
+    #     if other==1:
+    #         return self
+    #     else:
+    #         if not isinstance(other, self.__class__):
+    #             print(self,other)
+    #             raise TypeError("Only compatible with 1 and SumPol"+str(self)+str(other))
+    #         return self.__class__(self.rotation-other.rotation,
+    #                               self.size-other.size)
+    #     # Safe: Pol*Pol or Pol/Pol -> Polar
+    #     # Unknown: Pol*SumZ or SumZ/Pol or Pol/SumZ -> ???
+    #     # the safe thing to do would be to just return SumZ objects.
+    #     # What we might want to do is automatically detect if the result
+    #     # Could possibly be a SumPol.
+    #     # There are 5 possibilities of orientation to check,
+    #     # but how can we detect if the matrix is a power of the size 
+    #     # (tau) matrix?
+    # def __rtruediv__(self, other):
+    #     # other/self
+    #     if other==1:
+    #         return self.__class__(-self.rotation, -self.size)
+    #     else:
+    #         if not isinstance(other, self.__class__):
+    #             print(self,other)
+    #             raise TypeError("Only compatible with 1 and SumPol"+str(self)+str(other))
+    #         return self.__class__(other.rotation-self.rotation,
+    #                               other.size-self.size)
         
     def __add__(self, other):
         # One obvious case is if the other number is zero

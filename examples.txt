@@ -75,12 +75,14 @@ This is an example text file in reStructuredText format.  First import
 
     >>> from objmatrix import *
 
-Now use it:
-
+Now try matrix multiplication (the raison d'etre of ObjMatrix):
     >>> foo = ObjMatrix([[ONE, ZERO],[SumZ([0,1,2,3,4]),SumPol(2,1)]])
     >>> foo @ foo
     ObjMatrix([[SumPol([0,-1,-1,-1,-1]), SumZ([0,0,0,0,0])],
                [SumZ([0,-1,-2,2,6]), SumZ([0,1,2,1,0])]], dtype=object)
+
+The class also vectorizes several other operations that in numpy arrays
+work for ordinary numbers but not these objects.
     >>> foo.imag
     ObjMatrix([[ 0.        ,  0.        ],
                [-3.4409548 ,  1.53884177]])
@@ -90,3 +92,15 @@ Now use it:
     >>> foo*TAU
     ObjMatrix([[SumPol([0,0,-1,-1,0]), SumZ([0,0,0,0,0])],
                [SumZ([0,-2,1,4,2]), SumPol([0,1,0,-1,-1])]], dtype=object)
+
+As a bonus, this class also implements (2x2 at least) matrix inversion:
+
+    >>> foo = ObjMatrix([[1,2],[3,4]])
+    >>> np.allclose(foo.inverse.inverse,foo)
+    True
+    >>> np.allclose(np.identity(2),foo@foo.inverse)
+    True
+    >>> np.allclose(np.identity(2),foo.inverse@foo)
+    True
+
+... and in a way that works with SumZ objects.

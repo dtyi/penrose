@@ -75,7 +75,7 @@ class ObjMatrix(np.ndarray):
             # but pylint complains.
             a,b,c,d = tuple(self.flat)
             return self.__class__([[d,-b]
-                                  ,[-c,a]])*(a*d-b*c)
+                                  ,[-c,a]])/(a*d-b*c)
         else:
             # pylint complains, but self.shape should be a tuple
             # (from numpy ndarrays) so it should be subscriptable.
