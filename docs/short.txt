@@ -1,0 +1,16 @@
+The ``p3`` module
+======================
+
+(test using ``python3 -m doctest -v short.txt``)
+
+Using ``sumz``
+-------------------
+
+This is an example text file in reStructuredText format.  First import
+the ``sumz`` module:
+
+    >>> import sys
+    >>> sys.path.append("../")
+
+    >>> import numpy as np
+    >>> from zellige.sumz import *

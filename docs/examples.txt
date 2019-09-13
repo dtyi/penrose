@@ -1,7 +1,7 @@
 The ``p3`` module
 ======================
 
-(test using ``python -m doctest -v examples.txt``)
+(test using ``python3 -m doctest -v examples.txt``)
 
 Using ``sumz``
 -------------------
@@ -9,8 +9,11 @@ Using ``sumz``
 This is an example text file in reStructuredText format.  First import
 the ``sumz`` module:
 
+    >>> import sys
+    >>> sys.path.append("../")
+
     >>> import numpy as np
-    >>> from sumz import *
+    >>> from zellige.sumz import *
 
 Now use it:
 
@@ -103,7 +106,7 @@ Using ``objmatrix``
 This is an example text file in reStructuredText format.  First import
 ``objmatrix`` from the ``p3`` module:
 
-    >>> from objmatrix import *
+    >>> from zellige.objmatrix import *
 
 Now try matrix multiplication (the raison d'etre of ObjMatrix):
     >>> foo = ObjMatrix([[ONE, ZERO],[SumZ([0,1,2,3,4]),SumPol(2,1)]])

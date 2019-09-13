@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 import numpy as np
-from objmatrix import ObjMatrix
+from zellige.objmatrix import ObjMatrix
 
 
 """
@@ -344,7 +344,7 @@ def make_halfrhombs(number_system=CYCLOTOMIC):
 
         # symbolic requires SumZ and ObjMatrix
         if number_system == CYCLOTOMIC:
-            from sumz import SumZ, SumPol
+            from zellige.sumz import SumZ, SumPol
             pol = SumPol
             shape.vert_transf = ObjMatrix(
                 [[pol(0, 0), SumZ()],
@@ -368,7 +368,7 @@ def make_halfrhombs(number_system=CYCLOTOMIC):
     # (along with the half-rhomb shapes).
     tau = 1./2+np.sqrt(5)/2
     if number_system == CYCLOTOMIC:
-        from sumz import SumZ, SumPol
+        from zellige.sumz import SumZ, SumPol
         pol = SumPol
         # requires ObjMatrix and SumZ
         deflations = [BiDeflation(ObjMatrix([[pol(0, 0), pol(0, -1)],
