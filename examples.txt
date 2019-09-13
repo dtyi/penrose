@@ -147,7 +147,7 @@ As a bonus, this class also implements (2x2 at least) matrix inversion:
                [SumZ([0,0,0,0,0]), SumZ([0,-1,-1,-1,-1])]], dtype=object)
 
 Just note that if you're not careful, it's entirely possible to provoke
-a division error, due to how 2x2 matrix inversion includes division by
-the determinant ad-bc and the fact that arbitrary SumZ objects are not
+a division error, due to how 2x2 matrix inversion requires division by
+the determinant a*d-b*c and the fact that arbitrary SumZ objects are not
 guaranteed to have multiplicative inverses.
 
