@@ -81,7 +81,7 @@ Division is defined but not guaranteed to return any values. Use at your
 own risk. This is due to the fact that if these cyclotomic integers are
 defined over the integers rather than reals, this is a ring, and not a
 fully-fledged field. That said, it does work if np.linalg.solve finds
-a solution and it's all integers.
+a solution and it's all integers. Hopefully this is true when
 
     >>> foo = SumZ(0,1,2,3,4)
     >>> bar = SumZ(0,1,1,-1,-2)

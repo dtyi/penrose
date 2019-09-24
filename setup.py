@@ -3,6 +3,8 @@ from setuptools import setup
 with open("README.md", 'r') as f:
     long_description = f.read()
 
+"""Alternative names for this module: girih, jali, zelige, zellij"""
+
 setup(
    name='zellige',
    version='1.0',
