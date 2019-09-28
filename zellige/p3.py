@@ -10,6 +10,13 @@ http://www.ams.org/publicoutreach/feature-column/fcarc-penrose
 """
 DEBUG = False
 
+# adapted from:
+# https://www.codeproject.com/articles/15573/2d-polygon-collision-detection
+def interval_distance(minA, maxA, minB, maxB):
+    if (minA < minB):
+        return minB - maxA
+    else:
+        return minA - maxB
 
 class Edge:
     """
@@ -178,12 +185,12 @@ class Polygon(object):
         # print(edge_num-3,edge_num-1)
         # The vertices of the edge in question
         #edge = self.verts[origin_edge_index-3:origin_edge_index-1]
-        # Fancy indexing allows us to take two consecutive points from verts,
-        # wrapping around the end (slicing doesn't support this).
+        # Fancy indexing allows us to take two consecutive points from
+        # verts, wrapping around the end (slicing doesn't support this).
         edge = self.verts[np.arange(edge_num, edge_num+2) % 3]
         #edge = self.verts[origin_edge_index%3-3:(origin_edge_index+2)%3-3]
         ret = []
-        for match in matches:
+        for shape,ind in matches:
             # If we're matching a left-handed HalfRhomb to another
             # left-handed, or right to right, their rotation (rot)
             # will have the same signs. In that case, we have to
@@ -196,11 +203,11 @@ class Polygon(object):
             # Since that edge is shared with the self Polygon
             # (up to rotation), the inverse transforms our edge to
             # the identity vector of the target shape.
-            edge_transf = match[0].vert_transf[[match[1], (match[1]+1) % 3]]
-            if self.handedness*match[0].handedness > 0:
-                ret.append(match[0](edge_transf.inverse @ edge[::-1]))
+            edge_transf = shape.vert_transf[[ind, (ind+1) % 3]]
+            if self.handedness*shape.handedness > 0:
+                ret.append(shape(edge_transf.inverse @ edge[::-1]))
             else:
-                ret.append(match[0](edge_transf.inverse @ edge))
+                ret.append(shape(edge_transf.inverse @ edge))
         return ret
 
     @property
@@ -388,20 +395,21 @@ def make_halfrhombs(number_system=CYCLOTOMIC):
                                   FatA, FatB),
                       ]
     else:
+        ipi = 1j*np.pi/5
         deflations = [BiDeflation(ObjMatrix([[1, 1/tau],
-                                             [0, np.exp(3j*np.pi/5)/tau]]),
+                                             [0, np.exp(3*ipi)/tau]]),
                                   ThinA, ThinA),
-                      BiDeflation(ObjMatrix([[1, np.exp(2j*np.pi/5)],
-                                             [0, np.exp(-3j*np.pi/5)/tau]]),
+                      BiDeflation(ObjMatrix([[1, np.exp(2*ipi)],
+                                             [0, np.exp(-3*ipi)/tau]]),
                                   ThinA, FatA),
-                      BiDeflation(ObjMatrix([[1, np.exp(1j*np.pi/5)],
-                                             [0, np.exp(-4j*np.pi/5)/tau]]),
+                      BiDeflation(ObjMatrix([[1, np.exp(1*ipi)],
+                                             [0, np.exp(-4*ipi)/tau]]),
                                   FatA, FatA),
-                      BiDeflation(ObjMatrix([[1, np.exp(1j*np.pi/5)],
-                                             [0, np.exp(-1j*np.pi/5)/tau]]),
+                      BiDeflation(ObjMatrix([[1, np.exp(1*ipi)],
+                                             [0, np.exp(-1*ipi)/tau]]),
                                   FatA, ThinB),
                       BiDeflation(ObjMatrix([[1, tau],
-                                             [0, np.exp(5j*np.pi/5)/tau]]),
+                                             [0, np.exp(5*ipi)/tau]]),
                                   FatA, FatB),
                       ]
 
